@@ -1,6 +1,9 @@
 import copy
 import numpy 
 from random import shuffle
+
+from heapq import heappush, heappop
+
 #Criar tabuleiro
 def imprimindoTablueiro(matriz):
     for i in range(0,3):
@@ -88,7 +91,6 @@ def localizar(matriz,valor):
     for i in range (3):
         for j in range (3):
             if matriz[i][j] == valor:
-                print ("[" + str(i) + "," + str(j) + "]")
                 return i,j
 
 #Heuristica distância de Manhattan
@@ -103,6 +105,14 @@ def distanciaDosMovimentos(matriz,resposta):
     
     return dist
 
+def menorSomatorio(filhos):
+    distanciasDosFilhos = []
+    for i in filhos:
+        distanciasDosFilhos.append(distanciaDosMovimentos(i,resposta))
+    print("Vetor de distancia dos filhos")
+    print(distanciasDosFilhos)
+    posVet = distanciasDosFilhos.index(min(distanciasDosFilhos))
+    return filhos[posVet] #retorna o filho que tem a menor distancia das peças
 
 def buscaEmProfundidade(matriz):
     nivel=0#Profundidade dos nós
@@ -127,13 +137,9 @@ def buscaEmLargura():
     pass
 
 
-def menorSomatorio(filhos=[]):
-    distanciasDosFilhos = []
-    for i in filhos:
-        distanciasDosFilhos.append(distanciaDosMovimentos(i))
-    posVet = distanciasDosFilhos.index(min(distanciasDosFilhos))
-    return filhos[posVet] #retorna o filho que tem a menor distancia das peças
 
+
+"""
 
 def buscaHeuristica(matrizPai,resposta):
     custoDeEspaco=0
@@ -146,6 +152,8 @@ def buscaHeuristica(matrizPai,resposta):
         nivel+=1
         jogadasPossiveis=[]
         for filho in movimento(matriz):
+            #se ainda não foi visitado
+               #adiciona ele a lista de visitados
             try:
                 visitados.index(filho)
             except ValueError:
@@ -158,10 +166,60 @@ def buscaHeuristica(matrizPai,resposta):
             if(numpy.array_equal(matrizPai,i )):#Compara o pai com os que ja foram visitados para não entra em loop
                 #pega outro filho
                 pass
+"""
+def buscaHeuristica2(matrizPai,resposta):
+    custoDeEspaco=0
+    nivel=0#Nível da árvore
+    visitados=[matrizPai]#Começa com o pai
+    while(True):
+        if(numpy.array_equal(matrizPai,resposta)):
+            print("Solucao encontrada")
+            break
+        
+        nivel+=1
+        jogadasPossiveis=[]
+        for filho in movimento(matrizPai):
+            if filho not in visitados:
+            
+                jogadasPossiveis.append(filho)
+                #visitados.append(filho)
+        print("Tamanho dos visitados = "+str(len(visitados)))
+        custoDeEspaco+=len(jogadasPossiveis)#Todos os filhos gerados
+        matrizPai=menorSomatorio(jogadasPossiveis)#Retorna o filho com as peças menos distantes
+        
+        visitados.append(matrizPai)
+        
 
+    pass
 
-
-
+"""
+def busca_heuristica(start,goal,heuristica):
+    h = []
+    heappush(h,(heuristica(start,goal),start))#Empurra o valor para heap h
+    fathers = dict()
+    visited = [start]
+    while (len(h)>0):
+        (_,father) = heappop(h)#O retira o menor valor da heap h
+        for son in sons(father):
+            if son not in visited:
+                visited.append(son)
+               # print(len(visited))
+                fathers[son2str(son)] = father #Adiciona o pai ao dicionario
+                if son == goal: #Se for igual realiza 
+                    res = []
+                    node = son
+                    while node != start:
+                        res.append(node)
+                        node = fathers[son2str(node)]
+                    res.append(start)
+                    res.reverse()
+                    print(len(visited))
+                   # print(res)
+                    return res
+                else:        # Se nao adiciona os filhos a heap e começa tudo de novo pegando transformando o filho com menor distancia me pai
+                    heappush(h,(heuristica(son,goal),son))
+    print("Sem Solucao")
+    """
 
 
 
@@ -176,16 +234,16 @@ def A():
 
 #Resultado esperado
 resposta=[['1','2','3'],['4','5','6'],['7','8','0']]
+matriz=[ ['1','2','3'],['4','5','0'],['6','7','8'] ]
 
-
-matriz=criandoTabuleiro()
+#matriz=[ ['1','3','0'],['4','5','6'],['7','8','2'] ]
+#matriz=criandoTabuleiro()
 imprimindoTablueiro(matriz)
 lances=movimento(matriz)
-print(lances)
-custo=distanciaDosMovimentos(matriz,resposta)
+#print(lances)
+#custo=distanciaDosMovimentos(matriz,resposta)
 #buscaEmProfundidade(matriz)
-buscaHeuristica(matriz,resposta)
-print (custo)
+buscaHeuristica2(matriz,resposta)
 
 
  
