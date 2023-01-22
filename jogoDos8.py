@@ -1,8 +1,33 @@
 import copy
 import numpy 
 from random import shuffle
-
+from time import sleep
 from heapq import heappush, heappop
+
+
+#resposta=[['1','2','3'],['8','0','4'],['7','6','5']]
+#matriz=[ ['0','1','2'],['7','8','3'],['6','5','4'] ]
+#Resultado esperado
+resposta=[['1','2','3'],['4','5','6'],['7','8','0']]
+
+#matriz=[['1','3','6'],['4','2','0'],['7','5','8']]
+matriz=[['1','3','0'],['4','5','6'],['7','8','2']]
+#matriz=[['4','1','3'],['5','6','0'],['7','8','2']]
+#matriz=[['0','6','1'],['4','5','3'],['7','8','2']]
+#matriz=[['6','5','1'],['4','8','0'],['7','2','3']]
+
+
+
+#matriz=[ ['1','2','3'],['4','5','0'],['6','7','8'] ]
+#matriz=[ ['1','3','0'],['4','5','6'],['7','8','2'] ]
+#matriz=[ ['1','2','3'],['7','4','5'],['0','8','6'] ]
+
+ 
+#nao encontra solução
+#matriz=[ ['2','3','1'],['4','5','7'],['6','8','0'] ] #ñ é encontrada na busca gulosa
+#matriz=[ ['7','8','0'],['4','5','6'],['2','1','3'] ] #não é encontrada na busca gulosa nem na heuristica
+#matriz=[ ['8','7','6'],['5','4','3'],['2','1','0'] ] #não é encontrada na busca gulosa nem na heuristica
+#matriz=[ ['2','3','1'],['4','5','7'],['6','8','0'] ] #não é encontrada na busca gulosa 
 
 #Criar tabuleiro
 def imprimindoTablueiro(matriz):
@@ -11,6 +36,7 @@ def imprimindoTablueiro(matriz):
 
         if(i<2):
             print("------")
+    print("\n")
 
 def criandoTabuleiro():
     print ("Digite o estado inicial :")
@@ -94,26 +120,40 @@ def localizar(matriz,valor):
                 return i,j
 
 #Heuristica distância de Manhattan
-def distanciaDosMovimentos(matriz,resposta):
+def distaciaDeManhattan(matriz,resposta):
     dist =0
     for i in matriz:
         for j in i:
-            xAtual,yAtual= localizar(matriz,j)
-            xCorreto,yCorreto= localizar(resposta,j)
-            distancia=abs(xAtual-xCorreto)+abs(yAtual-yCorreto)#Distancia de Manhattan
-            dist+=distancia
+            #if not (j=='0'):#Não considera a movimentação da pedra branca
+                xAtual,yAtual= localizar(matriz,j)
+                xCorreto,yCorreto= localizar(resposta,j)
+                distancia=abs(int(xAtual-xCorreto))+abs(int(yAtual-yCorreto))#Distancia de Manhattan
+                dist+=distancia
+    
     
     return dist
 
 def menorSomatorio(filhos):
     distanciasDosFilhos = []
     for i in filhos:
-        distanciasDosFilhos.append(distanciaDosMovimentos(i,resposta))
-    print("Vetor de distancia dos filhos")
-    print(distanciasDosFilhos)
+        distanciasDosFilhos.append(distaciaDeManhattan(i,resposta))
+    #print("Vetor de distancia dos filhos")
+    #print(distanciasDosFilhos)
     posVet = distanciasDosFilhos.index(min(distanciasDosFilhos))
     return filhos[posVet] #retorna o filho que tem a menor distancia das peças
 
+#Número de elementos na posição errada
+def posicaoErrada(matriz,resposta):
+    cont=0
+    for i in range(3):
+        for j in range(3):
+            if matriz[i][j]!= resposta[i][j]:
+                cont+=1
+    return cont
+
+    
+
+"""
 def buscaEmProfundidade(matriz):
     nivel=0#Profundidade dos nós
     noNaoVisitado=[matriz]#pilha que começa com o primeiro nó
@@ -135,12 +175,8 @@ def buscaEmProfundidade(matriz):
 
 def buscaEmLargura():
     pass
-
-
-
-
 """
-
+#Busca gulosa utilizando como fronteira apenas os filhos de um pai que foi escolhido pela distÂncia de manhattan
 def buscaHeuristica(matrizPai,resposta):
     custoDeEspaco=0
     nivel=0#Nível da árvore
@@ -148,102 +184,98 @@ def buscaHeuristica(matrizPai,resposta):
     while(True):
         if(numpy.array_equal(matrizPai,resposta)):
             print("Solucao encontrada")
-        
-        nivel+=1
-        jogadasPossiveis=[]
-        for filho in movimento(matriz):
-            #se ainda não foi visitado
-               #adiciona ele a lista de visitados
-            try:
-                visitados.index(filho)
-            except ValueError:
-                jogadasPossiveis.append(filho)
-                visitados.append(filho)
-        
-        custoDeEspaco+=len(jogadasPossiveis)#Todos os filhos gerados
-        matrizPai=menorSomatorio(jogadasPossiveis)#Retorna o filho com as peças menos distantes
-        for i in visitados:
-            if(numpy.array_equal(matrizPai,i )):#Compara o pai com os que ja foram visitados para não entra em loop
-                #pega outro filho
-                pass
-"""
-def buscaHeuristica2(matrizPai,resposta):
-    custoDeEspaco=0
-    nivel=0#Nível da árvore
-    visitados=[matrizPai]#Começa com o pai
-    while(True):
-        if(numpy.array_equal(matrizPai,resposta)):
-            print("Solucao encontrada")
             break
-        
         nivel+=1
         jogadasPossiveis=[]
         for filho in movimento(matrizPai):
             if filho not in visitados:
-            
+               #visitados.append(filho)
                 jogadasPossiveis.append(filho)
                 #visitados.append(filho)
         print("Tamanho dos visitados = "+str(len(visitados)))
         custoDeEspaco+=len(jogadasPossiveis)#Todos os filhos gerados
-        matrizPai=menorSomatorio(jogadasPossiveis)#Retorna o filho com as peças menos distantes
-        
+        try:
+            matrizPai=menorSomatorio(jogadasPossiveis)#Retorna o filho com as peças menos distantes
+            imprimindoTablueiro(matrizPai)
+            
+        except:
+            print("NAO POSSUI SOLUCAO")
+            break
         visitados.append(matrizPai)
-        
-
-    pass
-
-"""
-def busca_heuristica(start,goal,heuristica):
+              
+#Busca gulosa com fronteira muito grande são todos os nós que ainda não foram expandidos
+def busca_heuristica2(matrizPai,resposta):
     h = []
-    heappush(h,(heuristica(start,goal),start))#Empurra o valor para heap h
-    fathers = dict()
-    visited = [start]
+    heappush(h,(distaciaDeManhattan(matrizPai,resposta),matrizPai))#Adiciona os elementos a heap  (distancia de manhattan , nó)
+    visitados = [matrizPai]
+    cont=0
     while (len(h)>0):
-        (_,father) = heappop(h)#O retira o menor valor da heap h
-        for son in sons(father):
-            if son not in visited:
-                visited.append(son)
-               # print(len(visited))
-                fathers[son2str(son)] = father #Adiciona o pai ao dicionario
-                if son == goal: #Se for igual realiza 
-                    res = []
-                    node = son
-                    while node != start:
-                        res.append(node)
-                        node = fathers[son2str(node)]
-                    res.append(start)
-                    res.reverse()
-                    print(len(visited))
-                   # print(res)
-                    return res
-                else:        # Se nao adiciona os filhos a heap e começa tudo de novo pegando transformando o filho com menor distancia me pai
-                    heappush(h,(heuristica(son,goal),son))
+        cont+=1
+        print("\n"+str(cont)+"\n")
+        (_,pai) = heappop(h)
+        imprimindoTablueiro(pai)
+
+        for filho in movimento(pai):
+            if filho not in visitados:
+                visitados.append(filho)
+                if filho == resposta:
+                    print("Solução encontrada")
+                    print(len(visitados))
+                    return 
+                else:
+                    heappush(h,(distaciaDeManhattan(filho,resposta),filho))
+
     print("Sem Solucao")
-    """
 
 
 
 
 
+# Função de conversão para str
+def son2str(s):
+    s1 = s[0] + s[1] + s[2]
+    return ''.join([str(v) for v in s1])
 
-    
+def busca_a_Star(start,goal,heuristica):
+    h = []
+    heappush(h,(heuristica(start, goal), start))
+    pais = dict()
+    visited = [start]
+    cont=0
+    while (len(h) > 0):
+        cont+=1
+       # print(cont)
+        (_, pai) = heappop(h)#Retira o menor elemento da heap
+        for filho in movimento(pai):
+            if filho not in visited:
+                visited.append(filho)
+                pais[son2str(filho)] = pai
+                no = filho
+                profund = 0
+                while no != start:
+                    no = pais[son2str(no)]
+                    profund += 1
+                if filho == goal:
+                    print(len(visited))
+                    print("Solução encontrada")
+                    return 
+                else:
+                    heappush(h, (heuristica(filho, goal)+ profund, filho))#Adiciona os itens na heap((distancia)+profundidade , filho)
+    print("Nao tem solucao")
 
 
-def A():
-    pass
 
-#Resultado esperado
-resposta=[['1','2','3'],['4','5','6'],['7','8','0']]
-matriz=[ ['1','2','3'],['4','5','0'],['6','7','8'] ]
-
-#matriz=[ ['1','3','0'],['4','5','6'],['7','8','2'] ]
 #matriz=criandoTabuleiro()
-imprimindoTablueiro(matriz)
+#imprimindoTablueiro(matriz)
 lances=movimento(matriz)
 #print(lances)
 #custo=distanciaDosMovimentos(matriz,resposta)
 #buscaEmProfundidade(matriz)
-buscaHeuristica2(matriz,resposta)
+
+buscaHeuristica(matriz,resposta)
+
+busca_heuristica2(matriz,resposta)
+busca_a_Star(matriz,resposta,distaciaDeManhattan)
 
 
  
